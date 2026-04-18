@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ThreatScan — AWS Cloud Club</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #060c1a;
+      --bg2:       #091222;
+      --surface:   #0d1a30;
+      --surface2:  #122040;
+      --border:    #1a2e50;
+      --border2:   #1e3660;
+      --gold:      #f5c842;
+      --gold2:     #ffd96a;
+      --gold-dim:  #a8862a;
+      --blue:      #3b9eff;
+      --blue2:     #6db8ff;
+      --blue-dim:  #1a4a80;
+      --text:      #d6e8ff;
+      --text2:     #e8f3ff;
+      --muted:     #4a6080;
+      --muted2:    #6080a0;
+      --safe:      #2eff9a;
+      --warn:      #ffb347;
+      --danger:    #ff4d6a;
+      --mono:      'Space Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND GRID ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,158,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,158,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 900px; height: 500px;
+      background: radial-gradient(ellipse at center, rgba(59,158,255,0.12) 0%, rgba(245,200,66,0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,12,26,0.88);
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 20px; }
+
+    .club-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-right: 20px;
+      border-right: 1px solid var(--border2);
+    }
+
+    .club-icon { width: 34px; height: 34px; flex-shrink: 0; }
+
+    .club-name { display: flex; flex-direction: column; line-height: 1.15; }
+
+    .club-name-top {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .club-name-bot {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text2);
+      font-weight: 700;
+    }
+
+    .app-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      color: var(--blue2);
+      text-transform: uppercase;
+    }
+
+    .app-title span { color: var(--gold); }
+
+    .status-pill {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 5px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border2);
+      color: var(--muted2);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+    }
+
+    .status-pill .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: all 0.3s;
+    }
+
+    .status-pill.connected { color: var(--safe); border-color: rgba(46,255,154,0.35); background: rgba(46,255,154,0.07); }
+    .status-pill.connected .dot { background: var(--safe); box-shadow: 0 0 8px var(--safe); }
+
+    /* ── HERO ── */
+    .hero-banner {
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, rgba(13,26,48,0.95) 0%, rgba(18,32,64,0.95) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 40px 56px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 120px;
+      background: radial-gradient(ellipse, rgba(245,200,66,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: '';
+      width: 36px; height: 1px;
+    }
+    .hero-eyebrow::before { background: linear-gradient(90deg, transparent, var(--gold-dim)); }
+    .hero-eyebrow::after  { background: linear-gradient(90deg, var(--gold-dim), transparent); }
+
+    .hero-banner h1 {
+      font-family: var(--mono);
+      font-size: clamp(26px, 4.5vw, 46px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text2);
+      margin-bottom: 18px;
+    }
+
+    .hero-banner h1 .blue { color: var(--blue2); }
+    .hero-banner h1 .gold { color: var(--gold); }
+
+    .hero-banner p {
+      color: var(--muted2);
+      font-size: 15px;
+      max-width: 520px;
+      margin: 0 auto;
+      font-weight: 300;
+    }
+
+    /* ── MAIN ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 40px 80px;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 20px;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue-dim), var(--gold-dim), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .panel:hover { border-color: var(--border2); box-shadow: 0 4px 32px rgba(59,158,255,0.07); }
+    .panel:hover::before { opacity: 1; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .panel-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    .step-badge {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue-dim), #0d2040);
+      border: 1px solid var(--blue);
+      font-family: var(--mono);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue2);
+      flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(59,158,255,0.2);
+    }
+
+    /* ── FORM ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+    label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 7px;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text2);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59,158,255,0.1);
+    }
+
+    input::placeholder { color: var(--muted); }
+
+    .cred-note {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted2);
+      padding: 10px 14px;
+      background: rgba(59,158,255,0.05);
+      border: 1px solid rgba(59,158,255,0.12);
+      border-radius: 7px;
+      font-style: italic;
+    }
+
+    /* ── DROPZONE ── */
+    .dropzone {
+      border: 1.5px dashed var(--border2);
+      border-radius: 12px;
+      padding: 52px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      background: rgba(59,158,255,0.02);
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--gold);
+      background: rgba(245,200,66,0.04);
+      box-shadow: 0 0 32px rgba(245,200,66,0.06);
+    }
+
+    .dropzone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+
+    .dropzone-icon {
+      width: 52px; height: 52px;
+      margin: 0 auto 18px;
+      background: linear-gradient(135deg, var(--surface2), var(--bg2));
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .dropzone-title { font-weight: 500; font-size: 15px; color: var(--text2); margin-bottom: 5px; }
+    .dropzone-sub   { font-size: 13px; color: var(--muted2); }
+
+    /* ── PREVIEW ── */
+    #preview-wrap {
+      margin-top: 18px;
+      display: none;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border2);
+      position: relative;
+      max-height: 280px;
+    }
+
+    #preview-wrap img { width: 100%; height: 280px; object-fit: cover; display: block; }
+
+    #preview-name {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(6,12,26,0.88);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted2);
+      padding: 9px 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    /* ── SCAN BUTTON ── */
+    .btn-scan {
+      width: 100%;
+      margin-top: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, #1a6fd4, #1558b0);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border: 1px solid rgba(59,158,255,0.4);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(26,111,212,0.35);
+    }
+
+    .btn-scan:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2278e8, #1a6fd4);
+      box-shadow: 0 6px 28px rgba(59,158,255,0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-scan:active:not(:disabled) { transform: translateY(0); }
+    .btn-scan:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESULTS ── */
+    #results { display: none; animation: fadeUp 0.4s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .verdict-banner {
+      border-radius: 10px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+      border: 1px solid;
+    }
+
+    .verdict-banner.threat { background: rgba(255,77,106,0.08); border-color: rgba(255,77,106,0.3); }
+    .verdict-banner.safe   { background: rgba(46,255,154,0.06); border-color: rgba(46,255,154,0.25); }
+
+    .verdict-icon { font-size: 28px; flex-shrink: 0; }
+
+    .verdict-title { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0.05em; }
+    .verdict-banner.threat .verdict-title { color: var(--danger); }
+    .verdict-banner.safe   .verdict-title { color: var(--safe); }
+    .verdict-sub { font-size: 13px; color: var(--muted2); margin-top: 3px; }
+
+    /* ── FINDINGS ── */
+    .findings-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 14px;
+    }
+
+    .finding-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .finding-row:last-child { border-bottom: none; }
+
+    .finding-type {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      width: 90px;
+      text-align: center;
+    }
+
+    .finding-type.moderation {
+      background: rgba(245,200,66,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(245,200,66,0.25);
+    }
+
+    .finding-type.object {
+      background: rgba(255,77,106,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(255,77,106,0.25);
+    }
+
+    .finding-name { font-weight: 500; font-size: 14px; color: var(--text2); flex: 1; }
+    .finding-bar-wrap { width: 160px; flex-shrink: 0; }
+
+    .finding-bar-bg {
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .finding-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.9s cubic-bezier(0.16,1,0.3,1);
+      width: 0;
+    }
+
+    .finding-bar-fill.high   { background: linear-gradient(90deg, #e03050, #ff4d6a); box-shadow: 0 0 8px rgba(255,77,106,0.5); }
+    .finding-bar-fill.medium { background: linear-gradient(90deg, #c88020, #f5c842); box-shadow: 0 0 8px rgba(245,200,66,0.4); }
+    .finding-bar-fill.low    { background: var(--muted); }
+
+    .finding-pct { font-family: var(--mono); font-size: 11px; color: var(--muted2); margin-top: 5px; text-align: right; }
+
+    /* ── ERROR ── */
+    .error-box {
+      background: rgba(255,77,106,0.08);
+      border: 1px solid rgba(255,77,106,0.25);
+      border-radius: 8px;
+      padding: 13px 18px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--danger);
+      display: none;
+      margin-top: 14px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 28px 40px;
+      border-top: 1px solid var(--border);
+      background: rgba(6,12,26,0.75);
+    }
+
+    .footer-club {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gold-dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .footer-links { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .footer-links a { color: var(--blue); text-decoration: none; }
+    .footer-links a:hover { color: var(--blue2); }
+
+    @media (max-width: 640px) {
+      header { padding: 0 20px; }
+      .hero-banner { padding: 40px 20px; }
+      main { padding: 32px 20px 60px; }
+      .club-name { display: none; }
+      .finding-bar-wrap { width: 100px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-left">
+    <div class="club-badge">
+      <!-- AWS Cloud Club icon: cloud in gold with blue scan lines -->
+      <svg class="club-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="8" fill="#0d1a30"/>
+        <path d="M28 23H13C10.8 23 9 21.2 9 19C9 17 10.4 15.4 12.3 15.1C12.2 14.7 12.1 14.4 12.1 14C12.1 11.8 13.9 10 16.1 10C17.1 10 18 10.4 18.7 11C19.5 9.4 21.2 8.3 23.2 8.3C26.2 8.3 28.6 10.7 28.6 13.7C28.6 13.9 28.6 14.1 28.5 14.3C30.1 14.8 31.2 16.3 31.2 18.1C31.2 20.8 29.8 23 28 23Z"
+              fill="#f5c842"/>
+        <line x1="14" y1="26" x2="14" y2="30" stroke="#3b9eff" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="18" y1="26" x2="18" y2="32" stroke="#3b9eff" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="22" y1="26" x2="22" y2="30" stroke="#3b9eff" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="26" y1="26" x2="26" y2="32" stroke="#3b9eff" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div class="club-name">
+        <span class="club-name-top">AWS</span>
+        <span class="club-name-bot">Cloud Club</span>
+      </div>
+    </div>
+    <div class="app-title">Threat<span>//</span>Scan</div>
+  </div>
+
+  <div class="status-pill" id="status-pill">
+    <div class="dot"></div>
+    <span id="status-text">Not connected</span>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero-banner">
+  <div class="hero-eyebrow">AWS Cloud Club Project</div>
+  <h1>
+    Image Threat Detection<br>
+    <span class="blue">powered by</span> <span class="gold">Rekognition</span>
+  </h1>
+  <p>Upload any image to scan it for weapons, fire, unsafe content, and more. Backed by Amazon Rekognition and your own AWS account — no backend required.</p>
+</div>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- STEP 1: CREDENTIALS -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="step-badge">1</div>
+      <span class="panel-label">AWS Credentials</span>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label>Access Key ID</label>
+        <input type="password" id="access-key" placeholder="AKIA..." autocomplete="off"/>
+      </div>
+      <div>
+        <label>Secret Access Key</label>
+        <input type="password" id="secret-key" placeholder="••••••••••••••••" autocomplete="off"/>
+      </div>
+      <div>
+        <label>S3 Bucket Name</label>
+        <input type="text" id="bucket" placeholder="my-bucket-name"/>
+      </div>
+      <div>
+        <label>Region</label>
+        <input type="text" id="region" placeholder="us-east-1" value="us-east-1"/>
+      </div>
+    </div>
+    <p class="cred-note">Your credentials are used only in your browser and are never stored or sent anywhere else. Never share real AWS keys publicly.</p>
+  </div>
+
+  <!-- STEP 2: UPLOAD -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="step-badge">2</div>
+      <span class="panel-label">Upload Image</span>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/gif"/>
+      <div class="dropzone-icon">🖼</div>
+      <div class="dropzone-title">Drop an image here</div>
+      <div class="dropzone-sub">or click to browse &mdash; JPG, PNG, WEBP supported</div>
+    </div>
+
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="Preview"/>
+      <div id="preview-name"></div>
+    </div>
+
+    <div class="error-box" id="error-box"></div>
+
+    <button class="btn-scan" id="scan-btn" disabled>
+      <div class="spinner" id="spinner"></div>
+      <span id="btn-label">Select an image to scan</span>
+    </button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="panel">
+      <div id="verdict-wrap"></div>
+      <div class="findings-panel" id="findings-wrap" style="display:none;">
+        <div class="findings-title">Findings</div>
+        <div id="findings-list"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-club">AWS Cloud Club &mdash; Threat Detection Project</div>
+  <div class="footer-links">
+    Built with AWS Rekognition &amp; S3 &nbsp;&mdash;&nbsp;
+    <a href="https://github.com/YOUR-USERNAME/threat-detector-image-analyzer" target="_blank">View on GitHub</a>
+  </div>
+</footer>
+
+<!-- AWS SDK v3 -->
+<script type="module">
+  import { RekognitionClient, DetectLabelsCommand, DetectModerationLabelsCommand }
+    from "https://esm.sh/@aws-sdk/client-rekognition@3";
+  import { S3Client, PutObjectCommand }
+    from "https://esm.sh/@aws-sdk/client-s3@3";
+
+  const fileInput    = document.getElementById('file-input');
+  const dropzone     = document.getElementById('dropzone');
+  const previewWrap  = document.getElementById('preview-wrap');
+  const previewImg   = document.getElementById('preview-img');
+  const previewName  = document.getElementById('preview-name');
+  const scanBtn      = document.getElementById('scan-btn');
+  const btnLabel     = document.getElementById('btn-label');
+  const spinner      = document.getElementById('spinner');
+  const errorBox     = document.getElementById('error-box');
+  const results      = document.getElementById('results');
+  const verdictWrap  = document.getElementById('verdict-wrap');
+  const findingsWrap = document.getElementById('findings-wrap');
+  const findingsList = document.getElementById('findings-list');
+  const statusPill   = document.getElementById('status-pill');
+  const statusText   = document.getElementById('status-text');
+  const accessKeyEl  = document.getElementById('access-key');
+  const secretKeyEl  = document.getElementById('secret-key');
+  const bucketEl     = document.getElementById('bucket');
+  const regionEl     = document.getElementById('region');
+
+  let selectedFile = null;
+
+  // ── Status indicator ───────────────────────────────────────────────────────
+  function updateStatus() {
+    const filled = accessKeyEl.value.trim() && secretKeyEl.value.trim()
+                && bucketEl.value.trim()    && regionEl.value.trim();
+    statusPill.classList.toggle('connected', !!filled);
+    statusText.textContent = filled ? 'Credentials set' : 'Not connected';
+    updateBtn();
+  }
+
+  [accessKeyEl, secretKeyEl, bucketEl, regionEl].forEach(el =>
+    el.addEventListener('input', updateStatus)
+  );
+
+  function updateBtn() {
+    const ready = selectedFile && accessKeyEl.value.trim()
+               && secretKeyEl.value.trim() && bucketEl.value.trim();
+    scanBtn.disabled = !ready;
+    btnLabel.textContent = ready
+      ? 'Scan Image'
+      : (selectedFile ? 'Fill in credentials above' : 'Select an image to scan');
+  }
+
+  // ── File handling ──────────────────────────────────────────────────────────
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      previewImg.src = ev.target.result;
+      previewName.textContent = file.name + '  ·  ' + (file.size / 1024).toFixed(1) + ' KB';
+      previewWrap.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    hideError();
+    results.style.display = 'none';
+    updateBtn();
+  }
+
+  // ── Scan ───────────────────────────────────────────────────────────────────
+  scanBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    const accessKey = accessKeyEl.value.trim();
+    const secretKey = secretKeyEl.value.trim();
+    const bucket    = bucketEl.value.trim();
+    const region    = regionEl.value.trim() || 'us-east-1';
+
+    if (!accessKey || !secretKey || !bucket) {
+      showError('Please fill in all AWS credentials and bucket name.');
+      return;
+    }
+
+    setLoading(true);
+    hideError();
+    results.style.display = 'none';
+
+    try {
+      const creds = { accessKeyId: accessKey, secretAccessKey: secretKey };
+
+      // Upload to S3
+      const s3  = new S3Client({ region, credentials: creds });
+      const key = `threatscan-${Date.now()}-${selectedFile.name}`;
+      await s3.send(new PutObjectCommand({
+        Bucket: bucket, Key: key,
+        Body: new Uint8Array(await selectedFile.arrayBuffer()),
+        ContentType: selectedFile.type,
+      }));
+
+      // Run both Rekognition APIs in parallel
+      const rek      = new RekognitionClient({ region, credentials: creds });
+      const imageRef = { S3Object: { Bucket: bucket, Name: key } };
+
+      const [modRes, labRes] = await Promise.all([
+        rek.send(new DetectModerationLabelsCommand({ Image: imageRef })),
+        rek.send(new DetectLabelsCommand({ Image: imageRef, MaxLabels: 50, MinConfidence: 50 })),
+      ]);
+
+      // Process findings
+      const dangerKeywords = new Set([
+        'Gun','Weapon','Knife','Fire','Explosion','Smoke',
+        'Blood','Accident','Rifle','Pistol','Ammo','Ammunition'
+      ]);
+
+      const findings = [];
+      (modRes.ModerationLabels || []).forEach(item =>
+        findings.push({ type: 'moderation', name: item.Name, confidence: item.Confidence })
+      );
+      (labRes.Labels || []).forEach(label => {
+        if (dangerKeywords.has(label.Name))
+          findings.push({ type: 'object', name: label.Name, confidence: label.Confidence });
+      });
+
+      findings.sort((a, b) => b.confidence - a.confidence);
+      renderResults(findings);
+
+    } catch (err) {
+      console.error(err);
+      showError(err.message || 'Something went wrong. Check your credentials and bucket name.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── Render results ─────────────────────────────────────────────────────────
+  function renderResults(findings) {
+    verdictWrap.innerHTML = '';
+    findingsList.innerHTML = '';
+    const isThreat = findings.length > 0;
+
+    verdictWrap.innerHTML = `
+      <div class="verdict-banner ${isThreat ? 'threat' : 'safe'}">
+        <div class="verdict-icon">${isThreat ? '🚨' : '✅'}</div>
+        <div>
+          <div class="verdict-title">${isThreat ? 'Threat Detected' : 'No Threats Found'}</div>
+          <div class="verdict-sub">${isThreat
+            ? `${findings.length} finding${findings.length > 1 ? 's' : ''} flagged by Rekognition`
+            : 'Image appears safe — no dangerous content or objects detected'
+          }</div>
+        </div>
+      </div>`;
+
+    if (isThreat) {
+      findings.forEach((f, i) => {
+        const pct   = f.confidence.toFixed(1);
+        const level = f.confidence >= 80 ? 'high' : f.confidence >= 60 ? 'medium' : 'low';
+        const row   = document.createElement('div');
+        row.className = 'finding-row';
+        row.style.animationDelay = `${i * 60}ms`;
+        row.innerHTML = `
+          <div class="finding-type ${f.type}">${f.type === 'moderation' ? 'Moderation' : 'Object'}</div>
+          <div class="finding-name">${f.name}</div>
+          <div class="finding-bar-wrap">
+            <div class="finding-bar-bg">
+              <div class="finding-bar-fill ${level}" data-pct="${pct}" style="width:0%"></div>
+            </div>
+            <div class="finding-pct">${pct}%</div>
+          </div>`;
+        findingsList.appendChild(row);
+      });
+
+      findingsWrap.style.display = 'block';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.querySelectorAll('.finding-bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+      }));
+    } else {
+      findingsWrap.style.display = 'none';
+    }
+
+    results.style.display = 'block';
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function setLoading(on) {
+    scanBtn.disabled = on;
+    spinner.style.display = on ? 'block' : 'none';
+    btnLabel.textContent  = on ? 'Scanning...' : 'Scan Image';
+  }
+
+  function showError(msg) { errorBox.textContent = '⚠  ' + msg; errorBox.style.display = 'block'; }
+  function hideError()    { errorBox.style.display = 'none'; }
+</script>
+</body>
+</html>
